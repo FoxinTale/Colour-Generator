@@ -42,10 +42,8 @@ public class ColourConversion {
         triadicHSVOne[0] = h;
         triadicHSVOne[1] = hsv[1];
         triadicHSVOne[2] = hsv[2];
-        float s = triadicHSVOne[1] *= 100;
-        float v = triadicHSVOne[2] *= 100;
-
-        System.out.println(h + " , " + s + " , " + v);
+        float s = triadicHSVOne[1];
+        float v = triadicHSVOne[2];
 
         return triadicHSVOne;
     }
@@ -64,8 +62,8 @@ public class ColourConversion {
         triadicHSVTwo[0] = h;
         triadicHSVTwo[1] = hsv[1];
         triadicHSVTwo[2] = hsv[2];
-        float s = triadicHSVTwo[1] *= 100;
-        float v = triadicHSVTwo[2] *= 100;
+        float s = triadicHSVTwo[1];
+        float v = triadicHSVTwo[2];
 
         System.out.println(h + " , " + s + " , " + v);
 
