@@ -64,9 +64,11 @@ public class ColourConversion {
     }
 
     //Plus 30.
-    public static float[] getAnalogousColourOne(float[] hsv){
+    public static float[] getAnalogousColourOne(float[] hsv, boolean isComp){
         float h = hsv[0];
-        h *= 360;
+        if(!isComp){
+            h *= 360;
+        }
 
         h += 30;
         if(h >= 360){
@@ -82,9 +84,12 @@ public class ColourConversion {
     }
 
     // Minus 30.
-    public static float[] getAnalogousColourTwo(float[] hsv){
+    public static float[] getAnalogousColourTwo(float[] hsv, boolean isComp){
         float h = hsv[0];
-        h *= 360;
+        if(!isComp){
+            h *= 360;
+        }
+
 
         float[] analogousTwoHSV = new float[3];
 
