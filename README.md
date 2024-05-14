@@ -7,5 +7,6 @@
 	- Tints.
 	- Shades.
 	- Custom Colours.
+	- Saving colours.
 	
 	

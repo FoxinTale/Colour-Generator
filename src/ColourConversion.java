@@ -1,120 +1,133 @@
-import javax.swing.*;
 import java.awt.*;
 
 public class ColourConversion {
-    public static String RGBHSV(float[] hsv){
+    // For some reason on this, directly accessing the array caused issues to modifying the variables so I had to make new ones.
+
+    public static String rgbToHSV(float[] hsv){
         float h = hsv[0];
         float s = hsv[1];
         float v = hsv[2];
-        return String.format("%.1f%n, %.1f%n, %.1f%n", h *= 360, s *= 100,v *= 100);
+        return String.format("%.1f%n, %.1f%n, %.1f%n", h * 360, s * 100, v * 100);
     }
 
-    public static float[] getComplimentaryColour(float [] hsv){
-        float h = hsv[0];
-        h *= 360;
+    // I do not know if I will ever need these, but they will be kept around regardless.
+    public static float[] rgbToCMYK(Color c) {
+        float[] cmyk = new float[4];
+        float key;
+        float red = (float) c.getRed() / 255;
+        float green = (float) c.getGreen() / 255;
+        float blue = (float) c.getBlue() / 255;
 
-        float[] complimentaryHSV = new float [3];
-        if(h <= 180){
-            h += 180.0;
+        float max = Math.max(Math.max(red, green), blue);
+
+        key = 1 - max;
+
+        if (key == 1) {
+            cmyk[0] = 0;
+            cmyk[1] = 0;
+            cmyk[2] = 0;
         } else {
-            h -= 180.0;
+            cmyk[0] = (1 - red - key) / (1 - key);
+            cmyk[1] = (1 - green - key) / (1 - key);
+            cmyk[2] = (1 - blue - key) / (1 - key);
         }
 
-        complimentaryHSV[0] = h;
-        complimentaryHSV[1] = hsv[1];
-        complimentaryHSV[2] = hsv[2];
-
-        return complimentaryHSV;
+        cmyk[3] = key;
+        return cmyk;
     }
 
-    public static float[] getTriadicColourOne(float[] hsv){
-        float h = hsv[0];
-        h *= 360;
+    public static int[] cmykToRGB(float[] cmyk) {
+        float key = cmyk[3];
+        float value;
+        int[] rgb = new int[3];
 
-        float[] triadicHSVOne = new float[3];
+        /*
+            Oh boy, this one is a beast.
+            This first started as three or four lines of code total.
+            I fully admit, I have no idea exactly what is going on with this bit of code (or, moreso why it is what it is).
+            I adapted it from Javascript from W3colors.js
 
-        h += 120;
-        if(h >= 360){
-            h -= 360;
+            255-((Math.min(1, ((cmyk[i] * (1 - key)) + key))) * 255)
+
+            The middle bit, cmyk[i] * (1 - key) takes the value and multiples it by 1 - the key value.
+
+            Afterwards, we take that and add the key.
+            Then we take this number and use Math.min on this and 1. The result is multiplied by 255.
+            Finally, this whole mess is subtracted from 255 and rounded to get an RGB value.
+         */
+        for( int i = 0; i < 3; i++){
+            value = 255-((Math.min(1, ((cmyk[i] * (1 - key)) + key))) * 255);
+            rgb[i] = Math.round(value);
         }
 
-        triadicHSVOne[0] = h;
-        triadicHSVOne[1] = hsv[1];
-        triadicHSVOne[2] = hsv[2];
-
-        return triadicHSVOne;
+        return rgb;
     }
 
-    public static float[] getTriadicColourTwo(float[] hsv){
-        float h = hsv[0];
-        h *= 360;
+    public static void hexToRGB(String hex) {
+        String hexCode;
 
-        float[] triadicHSVTwo = new float[3];
-
-        h -= 120;
-        if(h <= 0){
-            h += 360;
+        if (hex.startsWith("#")) {
+            hexCode = hex.substring(1);
+        } else {
+            hexCode = hex;
         }
 
-        triadicHSVTwo[0] = h;
-        triadicHSVTwo[1] = hsv[1];
-        triadicHSVTwo[2] = hsv[2];
+        if (hexCode.length() < 6) {
+            System.out.println("too short");
+        }
 
-        return triadicHSVTwo;
+        String hexR = hexCode.substring(0, 2);
+        String hexG = hexCode.substring(2, 4);
+        String hexB = hexCode.substring(4);
+
+        System.out.println(convertHexValue(hexR));
+        System.out.println(convertHexValue(hexG));
+        System.out.println(convertHexValue(hexB));
+
+
+        System.out.println(hexCode);
     }
 
-    //Plus 30.
-    public static float[] getAnalogousColourOne(float[] hsv, boolean isComp){
-        float h = hsv[0];
-        if(!isComp){
-            h *= 360;
-        }
+    public static int convertHexValue(String value) {
+        int firstNum = getNumberValue(value.substring(0, 1));
+        int secondNum = getNumberValue(value.substring(1, 2));
 
-        h += 30;
-        if(h >= 360){
-            h -= 360;
-        }
-
-        float[] analogousOneHSV = new float[3];
-
-        analogousOneHSV[0] = h;
-        analogousOneHSV[1] = hsv[1];
-        analogousOneHSV[2] = hsv[2];
-        return analogousOneHSV;
+        return (firstNum * 16) + secondNum;
     }
 
-    // Minus 30.
-    public static float[] getAnalogousColourTwo(float[] hsv, boolean isComp){
-        float h = hsv[0];
-        if(!isComp){
-            h *= 360;
+    public static int getNumberValue(String value) {
+        value = value.toUpperCase();
+        int num = 0;
+
+        try {
+            num = Integer.parseInt(value);
+        } catch (NumberFormatException nfe){
+            switch (value) {
+                case "A":
+                    num = 10;
+                    break;
+                case "B":
+                    num = 11;
+                    break;
+                case "C":
+                    num = 12;
+                    break;
+                case "D":
+                    num = 13;
+                    break;
+                case "E":
+                    num = 14;
+                    break;
+                case "F":
+                    num = 15;
+                    break;
+                default:
+                    break;
+            }
         }
 
-
-        float[] analogousTwoHSV = new float[3];
-
-        h -= 30;
-        if(h <= 0){
-            h += 360;
-        }
-
-        analogousTwoHSV[0] = h;
-        analogousTwoHSV[1] = hsv[1];
-        analogousTwoHSV[2] = hsv[2];
-        return analogousTwoHSV;
+        return num;
     }
 
-    // HSV and HSB are apparently the same thing, but "hsvValues" looked strange.
-    public static void fillColourInfo(JTextField rgbText, JTextField hexText,JTextField hsvText, JPanel colourPanel, float[] hsbValues){
-        Color colour = new Color(Color.HSBtoRGB(hsbValues[0] / 360, hsbValues[1], hsbValues[2]));
-        int r = colour.getRed();
-        int g = colour.getGreen();
-        int b = colour.getBlue();
 
-        String hex = String.format("#%02x%02x%02x", r, g, b);
-        rgbText.setText("(" + r + " , " + g + " , " + b + ")");
-        hexText.setText(hex);
-        hsvText.setText(String.format("%.1f%n, %.1f%n, %.1f%n", hsbValues[0], hsbValues[1] *= 100,hsbValues[2] *= 100));
-        colourPanel.setBackground(Color.decode(hex));
-    }
 }
