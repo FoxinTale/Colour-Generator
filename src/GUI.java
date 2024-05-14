@@ -1,6 +1,9 @@
 import javax.swing.*;
+import javax.swing.colorchooser.AbstractColorChooserPanel;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 
 public class GUI {
@@ -10,7 +13,7 @@ public class GUI {
 
 
     public static boolean customColourSelected;
-
+    public static Color customColour;
 
     // So much of this GUI is split off into separate functions, mainly because it was starting to get too lengthy to comprehend for me.
     // And, being basically a lot of repeated code it helped.
@@ -45,18 +48,41 @@ public class GUI {
         JTextField[] hsvTexts = new JTextField[8];
         JPanel[] colourPanels = new JPanel[8];
 
+        JPanel monoBaseColourPanel = new RoundedPanel(5);
+        JPanel monoColourOnePanel = new RoundedPanel(5);
+        JPanel monoColourTwoPanel = new RoundedPanel(5);
+        JPanel monoColourThreePanel = new RoundedPanel(5);
+        JPanel monoColourFourPanel = new RoundedPanel(5);
+
+        JTextField monoBaseColourText = new JTextField();
+        JTextField monoColourOneText = new JTextField();
+        JTextField monoColourTwoText = new JTextField();
+        JTextField monoColourThreeText = new JTextField();
+        JTextField monoColourFourText = new JTextField();
+
+
+
         fillTextBoxArray(rgbTexts);
         fillTextBoxArray(hexTexts);
         fillTextBoxArray(hsvTexts);
 
         JButton generate = new JButton("Give me a colour!");
+        JButton openPicker = new JButton("Pick Colour");
 
         // Main Labels
         primaryLabel.setBounds(55, 25, 100, 25);
         primaryLabelTwo.setBounds(900, 25, 100, 25);
 
         // I gave up trying to put these into a loop of some kind.
-        //It's good enough for now. I've done enough code moving.
+        // It's good enough for now. I've done enough code moving.
+        // Maybe I'll revisit it later.
+
+        /*
+        If I were to put it into a sort of function, height is the only thing that stays the same. That is at 25.
+        I also think I'll need to re-arrange how all the arrays are structured. Or change the way I structured the GUI.
+
+
+         */
         rgbTexts[0].setBounds(100, 61, 100, 25);
         rgbTexts[1].setBounds(315, 61, 100, 25);
         rgbTexts[2].setBounds(100, 236, 100, 25);
@@ -84,7 +110,7 @@ public class GUI {
         hsvTexts[6].setBounds(730, 131, 110, 25);
         hsvTexts[7].setBounds(730, 306, 110, 25);
 
-        generate.setBounds(15, 550, 740, 40);
+        generate.setBounds(15, 620, 740, 40);
         useCustomColourOption.setBounds(15, 165, 150, 25);
 
         int panelY = 23;
@@ -100,19 +126,22 @@ public class GUI {
                 r = Generate.red();
                 g = Generate.green();
                 b = Generate.blue();
-
-                String hex = String.format("#%02x%02x%02x", r, g, b);
-                rgbTexts[0].setText("(" + r + " , " + g + " , " + b + ")");
-                hexTexts[0].setText(hex);
-                colourPanels[0].setBackground(Color.decode(hex));
-                Color.RGBtoHSB(r, g, b, hsv);
-                hsvTexts[0].setText(ColourConversion.rgbToHSV(hsv));
-
-                FileOps.writeFile();
             } else {
-                // We're going to get the custom colour from the
+                r = customColour.getRed();
+                g = customColour.getGreen();
+                b = customColour.getBlue();
             }
 
+            String hex = String.format("#%02x%02x%02x", r, g, b);
+            rgbTexts[0].setText("(" + r + " , " + g + " , " + b + ")");
+            hexTexts[0].setText(hex);
+            colourPanels[0].setBackground(Color.decode(hex));
+            Color.RGBtoHSB(r, g, b, hsv);
+            hsvTexts[0].setText(ColourConversion.rgbToHSV(hsv));
+
+
+            // I could probably put these into a sort of multi-dimensional array and then put it in a loop. but uh...why.
+            // That just seems painful and somewhat pointless to save just a few lines of code, when this already works.
             float[] compHSV = MakeColours.getComplimentaryColour(hsv);
             float[] triOneHSV = MakeColours.getTriadicColour(hsv, false);
             float[] triTwoHSV = MakeColours.getTriadicColour(hsv, true);
@@ -135,17 +164,30 @@ public class GUI {
 
             if(customColourSelected){
                 generate.setText("Give me information about this colour.");
+                openPicker.setVisible(true);
             } else {
                 generate.setText("Give me a colour.");
+                openPicker.setVisible(false);
             }
         };
 
+        ActionListener openPickerDo = e -> {
+          if(customColourSelected){
+           colourPicker(colourPanels[0], rgbTexts[0]);
+          }
+        };
+
+        openPicker.setVisible(false);
 
         generate.addActionListener(generateDo);
         useCustomColourOption.addActionListener(customColourDo);
+        openPicker.addActionListener(openPickerDo);
 
         window.add(primaryLabel);
         window.add(primaryLabelTwo);
+
+        monoBaseColourPanel.setBounds(20, 375, 75,75);
+        openPicker.setBounds(225, 167, 100, 20);
 
         drawLabelGrouping(window, 20, 60); // Primary Colour
         drawLabelGrouping(window, 232, 60); // Complimentary Colour
@@ -163,6 +205,7 @@ public class GUI {
         drawAnalogousLabels(window);
         drawTriadicLabels(window);
         drawCompLabels(window);
+
         // 23, 58, 93, 128, 163, 198, 233, 268, 303, 338, 373, 408, 443, 478, 513, 548
         drawPanelGrouping(window, 15, 23, panelColour); // Primary Colour
         drawPanelGrouping(window, 225, 23, panelColour); // Complimentary Colour
@@ -173,7 +216,10 @@ public class GUI {
         drawPanelGrouping(window, 645, 23, panelColour); // Split Complimentary One
         drawPanelGrouping(window, 645, 198, panelColour); //Split Complimentary Two
 
+        window.add(monoBaseColourPanel);
+        window.add(useCustomColourOption);
         window.add(generate);
+        window.add(openPicker);
 
         window.setSize(1280, 800);
         window.setResizable(false);
@@ -282,5 +328,35 @@ public class GUI {
             posY += 35;
             window.add(panels[i]);
         }
+    }
+
+    public static void colourPicker(JPanel colourPanel, JTextField colourText) {
+        JFrame window = new JFrame();
+        window.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
+        JFrame.setDefaultLookAndFeelDecorated(true);
+        JColorChooser colourPicker = new JColorChooser();
+        colourPicker.setBounds(5, 5, 600, 320);
+        AbstractColorChooserPanel[] accp = colourPicker.getChooserPanels();
+
+        colourPicker.removeChooserPanel(accp[0]);
+        colourPicker.removeChooserPanel(accp[1]);
+        colourPicker.removeChooserPanel(accp[2]);
+        colourPicker.removeChooserPanel(accp[accp.length - 1]);
+        colourPicker.setPreviewPanel(new JPanel());
+
+        window.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent windowEvent) {
+                customColour = colourPicker.getColor();
+                colourPanel.setBackground(customColour);
+                colourText.setText(ColourConversion.rgbToHex(customColour));
+            }
+        });
+
+        window.add(colourPicker);
+
+        window.setSize(720, 320);
+        window.setResizable(false);
+        window.setLayout(null);// using no layout managers
+        window.setVisible(true);// making the frame visible
     }
 }

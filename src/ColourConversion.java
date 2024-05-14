@@ -129,5 +129,8 @@ public class ColourConversion {
         return num;
     }
 
+    public static String rgbToHex(Color c){
+        return String.format("#%02x%02x%02x", c.getRed(), c.getGreen(), c.getBlue());
+    }
 
 }
